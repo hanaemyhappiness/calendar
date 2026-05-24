@@ -336,25 +336,45 @@ var events = [], editId = null, selG = null, popDay = null;
 var msgTimer = null;
 
 var SEED = [
-  {id:'s1', date:'2026-06-01', start:'18:30', end:'21:40', genre:2, content:'日本語教育実践１（留学生）#8'},
-  {id:'s2', date:'2026-06-04', start:'18:30', end:'21:40', genre:2, content:'日本語教育実践２（生活者/ビジネスパーソン）#8'},
-  {id:'s3', date:'2026-06-06', start:'12:00', end:'15:00', genre:1, content:'日本語教育実践２（生活者/ビジネスパーソン）テスト'},
-  {id:'s4', date:'2026-06-07', start:'14:00', end:'17:10', genre:2, content:'言語の構造 #8'},
-  {id:'s5', date:'2026-06-09', start:'21:00', end:'24:00', genre:1, content:'言語の構造 テスト'},
-  {id:'s6', date:'2026-06-13', start:'12:00', end:'15:00', genre:1, content:'日本語教育実践１（留学生）テスト'},
-  {id:'s7', date:'2026-06-14', start:'15:00', end:'18:00', genre:1, content:'日本語教育実践３（技能別指導）テスト'},
-  {id:'s8', date:'2026-06-17', start:'18:30', end:'21:40', genre:2, content:'評価法とICT #6'},
-  {id:'s9', date:'2026-06-22', start:'18:00', end:'21:00', genre:1, content:'日本語教育文法 テスト'},
-  {id:'s10',date:'2026-06-27', start:'09:00', end:'12:00', genre:1, content:'科目９ テスト'},
-  {id:'s11',date:'2026-06-30', start:'21:00', end:'24:00', genre:1, content:'評価法とICT テスト'}
+  {id:'s1',  date:'2026-06-01', start:'18:30', end:'21:40', genre:2, content:'日本語教育実践１（留学生）#8'},
+  {id:'s2',  date:'2026-06-04', start:'18:30', end:'21:40', genre:2, content:'日本語教育実践２（生活者/ビジネスパーソン）#8'},
+  {id:'s3',  date:'2026-06-06', start:'12:00', end:'15:00', genre:1, content:'日本語教育実践２（生活者/ビジネスパーソン）テスト'},
+  {id:'s4',  date:'2026-06-06', start:'10:00', end:'13:10', genre:2, content:'日本語教育文法 #6'},
+  {id:'s5',  date:'2026-06-07', start:'14:00', end:'17:10', genre:2, content:'言語の構造 #8'},
+  {id:'s6',  date:'2026-06-09', start:'21:00', end:'24:00', genre:1, content:'言語の構造 テスト'},
+  {id:'s7',  date:'2026-06-10', start:'19:00', end:'21:00', genre:10, content:'公共の会食'},
+  {id:'s8',  date:'2026-06-13', start:'12:00', end:'15:00', genre:1, content:'日本語教育実践１（留学生）テスト'},
+  {id:'s9',  date:'2026-06-14', start:'15:00', end:'18:00', genre:1, content:'日本語教育実践３（技能別指導）テスト'},
+  {id:'s10', date:'2026-06-17', start:'19:00', end:'21:00', genre:10, content:'公共の会食'},
+  {id:'s11', date:'2026-06-22', start:'18:00', end:'21:00', genre:1, content:'日本語教育文法 テスト'},
+  {id:'s12', date:'2026-06-28', start:'15:00', end:'18:00', genre:1, content:'日本語教育実践２（生活者/ビジネスパーソン）テスト'},
+  {id:'s13', date:'2026-06-30', start:'21:00', end:'24:00', genre:1, content:'評価法とICT テスト'}
+];
+
+// 誕生日
+var SEED_BDAY = [
+  {id:'b1', date:'2026-04-26', start:'', end:'', genre:6, content:'朗くん'},
+  {id:'b2', date:'2026-06-04', start:'', end:'', genre:6, content:'吉井先生'},
+  {id:'b3', date:'2026-06-06', start:'', end:'', genre:6, content:'八木先生'},
+  {id:'b4', date:'2026-06-14', start:'', end:'', genre:6, content:'鈴木先生'}
+];
+
+// クローバーリマインダー初期値
+var SEED_CLOVER = [
+  {id:'c1', title:'MFTeam北見', startDate:'2026-06-10', endDate:'2026-06-11'},
+  {id:'c2', title:'MFTeam東京', startDate:'2026-06-16', endDate:'2026-06-21'}
 ];
 
 function loadData() {
   try {
     var d = JSON.parse(localStorage.getItem('myCalEvents') || 'null');
-    events = (d && d.length > 0) ? d : JSON.parse(JSON.stringify(SEED));
+    if (d && d.length > 0) {
+      events = d;
+    } else {
+      events = JSON.parse(JSON.stringify(SEED)).concat(JSON.parse(JSON.stringify(SEED_BDAY)));
+    }
   } catch(e) {
-    events = JSON.parse(JSON.stringify(SEED));
+    events = JSON.parse(JSON.stringify(SEED)).concat(JSON.parse(JSON.stringify(SEED_BDAY)));
   }
 }
 
@@ -833,9 +853,9 @@ var cloverReminders = [];
 
 function loadClover() {
   try {
-    var d = JSON.parse(localStorage.getItem('myCloverReminders') || '[]');
-    cloverReminders = Array.isArray(d) ? d : [];
-  } catch(e) { cloverReminders = []; }
+    var d = JSON.parse(localStorage.getItem('myCloverReminders') || 'null');
+    cloverReminders = (d && d.length > 0) ? d : JSON.parse(JSON.stringify(SEED_CLOVER));
+  } catch(e) { cloverReminders = JSON.parse(JSON.stringify(SEED_CLOVER)); }
 }
 function saveClover() {
   try { localStorage.setItem('myCloverReminders', JSON.stringify(cloverReminders)); } catch(e) {}
