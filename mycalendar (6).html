@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイカレンダー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+:root{
+  --paper:#F5EFE4; --paper2:#EFE7D8; --cream:#FAF5EC;
+  --biscuit:#E8D9C0; --caramel:#C4935A; --walnut:#7A5C3A;
+  --ink:#3C2E1E; --inks:#7A6A58; --inkp:#B0A090; --warm:#FDFAF5;
+  --sw:rgba(90,60,20,.10); --ss:rgba(90,60,20,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:var(--paper);min-height:100vh;color:var(--ink);
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C4935A' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");}
+.app{max-width:500px;margin:0 auto;padding:0 0 60px;}
+
+/* HEADER */
+.hdr{padding:14px 16px 10px;background:var(--warm);border-bottom:2px solid var(--biscuit);position:sticky;top:0;z-index:50;}
+.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.hdr2{display:flex;align-items:center;justify-content:space-between;}
+.mnav{display:flex;align-items:center;gap:10px;}
+.nbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--biscuit);background:var(--cream);color:var(--walnut);font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px var(--sw);transition:all .15s;}
+.nbtn:hover{background:var(--biscuit);transform:scale(1.08);}
+.mtitle{font-size:1.3rem;font-weight:800;letter-spacing:1.5px;min-width:110px;text-align:center;}
+.abtn{background:var(--walnut);color:var(--cream);border:none;border-radius:20px;padding:8px 16px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;box-shadow:0 3px 8px var(--sw);transition:all .15s;}
+.abtn:hover{background:var(--caramel);transform:scale(1.03);}
+.smsg{font-size:.62rem;font-weight:700;min-width:90px;}
+.smsg.ok{color:#7A9A6A;}
+.bbtn{padding:5px 10px;border:1.5px solid var(--biscuit);border-radius:20px;background:var(--cream);font-family:inherit;font-size:.62rem;font-weight:700;color:var(--walnut);cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px var(--ss);}
+.bbtn:hover{background:var(--biscuit);}
+
+/* CALENDAR */
+.cwrap{background:var(--warm);margin:14px 14px 0;border-radius:16px;padding:14px 12px 18px;border:1.5px solid var(--biscuit);box-shadow:0 2px 0 var(--biscuit),0 4px 16px var(--sw);}
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--biscuit);}
+.wdays span{font-size:.65rem;font-weight:700;color:var(--inkp);letter-spacing:.5px;}
+.wdays span:first-child{color:#E05555;} .wdays span:last-child{color:#7090C0;}
+.dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.dc{min-height:56px;border-radius:10px;padding:5px 3px 4px;cursor:default;display:flex;flex-direction:column;align-items:center;transition:all .15s;position:relative;}
+.dc.hev{cursor:pointer;background:var(--cream);border:1px solid var(--biscuit);box-shadow:0 2px 6px var(--ss),0 1px 0 var(--biscuit);}
+.dc.hev:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 5px 14px var(--sw);z-index:2;}
+.dc.emp{visibility:hidden;}
+.dn{font-size:.73rem;font-weight:700;color:var(--inks);line-height:1;margin-bottom:3px;}
+.dc.sun .dn{color:#E05555;} .dc.sat .dn{color:#7090C0;}
+.dc.hol .dn{color:#C4935A;}
+.dc.tod .dn{background:var(--walnut);color:var(--cream);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;}
+.cevs{display:flex;flex-direction:column;gap:2px;width:100%;}
+.ctag{font-size:.42rem;font-weight:700;padding:2px 4px;border-radius:5px;text-align:center;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:#3C2E1E;box-shadow:0 1px 3px rgba(0,0,0,.10);}
+.ctag.span-start{border-radius:5px 0 0 5px;margin-right:-2px;}
+.ctag.span-mid{border-radius:0;margin-right:-2px;margin-left:-2px;opacity:.85;}
+.ctag.span-end{border-radius:0 5px 5px 0;margin-left:-2px;}
+.span-pill{font-size:.38rem;background:rgba(0,0,0,.12);border-radius:3px;padding:1px 3px;margin-left:2px;}
+
+/* LIST */
+.lsec{padding:20px 14px 0;}
+.lhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ltitle{font-size:.82rem;font-weight:700;color:var(--walnut);display:flex;align-items:center;gap:7px;}
+.ltitle::before{content:'';width:3px;height:14px;background:var(--caramel);border-radius:4px;display:inline-block;}
+.lcnt{font-size:.68rem;font-weight:700;color:var(--inkp);background:var(--biscuit);padding:2px 10px;border-radius:20px;}
+.eitem{background:var(--warm);border-radius:16px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;border:1.5px solid var(--biscuit);box-shadow:0 3px 0 var(--biscuit),0 4px 12px var(--ss);transition:all .15s;}
+.eitem:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--biscuit),0 6px 18px var(--sw);}
+.ebar{width:5px;min-height:38px;border-radius:4px;align-self:stretch;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.ebody{flex:1;min-width:0;}
+.emeta{font-size:.65rem;font-weight:700;color:var(--inkp);margin-bottom:3px;}
+.ename{font-size:.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.badge{font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.10);color:#3C2E1E;}
+.ibtn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;transition:all .15s;}
+.ibtn:hover{transform:scale(1.1);}
+.empty{text-align:center;padding:36px 20px;color:var(--inkp);font-size:.82rem;font-weight:700;line-height:1.8;}
+
+/* LEGEND */
+.lwrap{margin:20px 14px 0;background:var(--warm);border:1.5px solid var(--biscuit);border-radius:16px;padding:14px 16px;box-shadow:0 2px 0 var(--biscuit),0 4px 12px var(--ss);}
+.lgt{font-size:.68rem;font-weight:700;color:var(--inkp);margin-bottom:10px;letter-spacing:1px;}
+.lg{display:flex;flex-wrap:wrap;gap:8px;}
+.lgi{display:flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;color:var(--inks);}
+.lgd{height:10px;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+/* OVERLAY */
+.ov{position:fixed;inset:0;background:rgba(40,28,16,.45);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;padding:16px;}
+.ov.on{opacity:1;pointer-events:all;}
+
+/* DAY POPUP */
+.dpop{background:var(--warm);border-radius:22px;padding:22px 18px 18px;width:100%;max-width:360px;max-height:82vh;overflow-y:auto;border:2px solid var(--biscuit);box-shadow:0 4px 0 var(--biscuit),0 12px 48px rgba(60,30,10,.25);transform:scale(.88) translateY(14px);transition:transform .28s cubic-bezier(.34,1.56,.64,1);}
+.ov.on .dpop{transform:scale(1) translateY(0);}
+.phdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--biscuit);}
+.pdate{font-size:1.05rem;font-weight:700;}
+.xcbtn{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--biscuit);background:var(--paper2);color:var(--walnut);font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.xcbtn:hover{background:var(--biscuit);transform:rotate(90deg);}
+.pev{display:flex;gap:10px;align-items:center;padding:10px 11px;border-radius:11px;background:var(--cream);border:1px solid var(--biscuit);box-shadow:0 2px 0 var(--biscuit),0 3px 8px var(--ss);margin-bottom:7px;}
+.pbar{width:4px;min-height:36px;border-radius:3px;align-self:stretch;flex-shrink:0;}
+.pinfo{flex:1;}
+.ptime{font-size:.65rem;font-weight:700;color:var(--inkp);margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pname{font-size:.84rem;font-weight:700;}
+.paddbtn{width:100%;padding:10px;border:1.5px dashed var(--biscuit);border-radius:10px;background:none;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--inkp);cursor:pointer;margin-top:10px;transition:all .15s;}
+.paddbtn:hover{border-color:var(--caramel);color:var(--caramel);background:var(--cream);}
+
+/* MODAL */
+.modal{background:var(--warm);border-radius:22px;padding:24px 20px 20px;width:100%;max-width:400px;max-height:92vh;overflow-y:auto;border:2px solid var(--biscuit);box-shadow:0 4px 0 var(--biscuit),0 12px 48px rgba(60,30,10,.25);transform:scale(.88) translateY(14px);transition:transform .28s cubic-bezier(.34,1.56,.64,1);}
+.ov.on .modal{transform:scale(1) translateY(0);}
+.mttl{font-size:1rem;font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px dashed var(--biscuit);}
+.fg{margin-bottom:14px;}
+.fl{font-size:.7rem;font-weight:700;color:var(--walnut);margin-bottom:5px;display:block;letter-spacing:.3px;}
+.fi,.fta{width:100%;padding:10px 12px;border:1.5px solid var(--biscuit);border-radius:10px;font-family:inherit;font-size:.84rem;color:var(--ink);background:var(--cream);outline:none;transition:all .15s;}
+.fi:focus,.fta:focus{border-color:var(--caramel);box-shadow:0 0 0 3px rgba(196,147,90,.15);}
+.fta{resize:vertical;min-height:68px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ggrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.gopt{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1.5px solid var(--biscuit);border-radius:10px;cursor:pointer;background:var(--cream);transition:all .15s;}
+.gopt:hover{background:var(--paper2);}
+.gopt.sel{border-color:var(--walnut);background:var(--paper2);box-shadow:0 2px 6px var(--sw);}
+.gdot{height:12px;border-radius:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.glbl{font-size:.72rem;font-weight:700;}
+.mbtns{display:flex;gap:9px;margin-top:18px;}
+.bcancel{flex:1;padding:11px;border:1.5px solid var(--biscuit);border-radius:12px;background:var(--cream);font-family:inherit;font-size:.82rem;font-weight:700;color:var(--inks);cursor:pointer;transition:all .15s;}
+.bcancel:hover{background:var(--biscuit);}
+.bsave{flex:2;padding:11px;border:none;border-radius:12px;background:var(--walnut);font-family:inherit;font-size:.82rem;font-weight:700;color:var(--cream);cursor:pointer;box-shadow:0 3px 0 rgba(60,30,10,.25);transition:all .15s;}
+.bsave:hover{background:var(--caramel);transform:translateY(-1px);}
+
+/* CLOVER REMINDER SECTION */
+.clover-section{
+  margin:12px 14px 0;
+  background:var(--warm);
+  border:1.5px solid #B8D8B0;
+  border-radius:16px;
+  padding:12px 14px;
+  box-shadow:0 2px 0 #B8D8B0, 0 4px 12px rgba(80,140,80,.08);
+}
+.clover-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.clover-hdr-left{display:flex;align-items:center;gap:7px;}
+.clover-hdr-icon{font-size:1.1rem;animation:pinWobble 3s ease-in-out infinite;}
+@keyframes pinWobble{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.clover-hdr-title{font-size:.82rem;font-weight:800;color:#3A6A3A;}
+.clover-add-btn{
+  padding:4px 12px;border:1.5px solid #A8D0A0;border-radius:16px;
+  background:#F0FAF0;font-family:inherit;font-size:.65rem;font-weight:700;
+  color:#3A6A3A;cursor:pointer;transition:all .15s;
+}
+.clover-add-btn:hover{background:#D8F0D8;}
+.clover-empty{font-size:.72rem;color:#8AB88A;font-weight:700;text-align:center;padding:6px 0;}
+.clover-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:10px;
+  background:linear-gradient(135deg,#F0FAF0,#E8F5E8);
+  border:1px solid #C0D8B8;
+  margin-bottom:6px;
+  animation:cloverIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cloverIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.clover-item-pin{font-size:1.1rem;flex-shrink:0;animation:dotPulse 2.5s ease-in-out infinite;}
+@keyframes dotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.clover-item-body{flex:1;min-width:0;}
+.clover-item-title{font-size:.78rem;font-weight:800;color:#3A5A3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.clover-item-dates{font-size:.62rem;font-weight:700;color:#7A9A7A;margin-top:1px;}
+.clover-item-del{
+  width:22px;height:22px;border-radius:6px;border:none;
+  background:#E8F0E8;color:#7A9A7A;font-size:.7rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;
+}
+.clover-item-del:hover{background:#C8DCC8;color:#3A6A3A;transform:scale(1.1);}
+
+/* CLOVER PIN ON CELL */
+.clover-dot{
+  position:absolute;top:1px;right:2px;
+  font-size:.8rem;line-height:1;
+  filter:drop-shadow(0 1px 2px rgba(0,100,0,.25));
+  animation:dotPulse 2.5s ease-in-out infinite;
+  pointer-events:none;
+}
+/* BIRTHDAY PIN ON CELL */
+.bday-dot{
+  position:absolute;top:1px;left:2px;
+  font-size:.8rem;line-height:1;
+  filter:drop-shadow(0 1px 2px rgba(200,100,0,.25));
+  animation:bdayBounce 2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes bdayBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+/* GLITTER BADGE */
+.badge-fancy {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  position: relative;
+  overflow: hidden;
+}
+.badge-fancy::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg,
+    transparent 20%, rgba(255,255,255,0.55) 40%,
+    rgba(255,255,255,0.15) 50%, transparent 60%);
+  animation: glitter 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glitter {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.lock-screen{
+  position:fixed;inset:0;z-index:999;
+  background:var(--paper);
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C4935A' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+  display:flex;align-items:center;justify-content:center;
+}
+.lock-box{
+  background:var(--warm);border:2px solid var(--biscuit);
+  border-radius:24px;padding:36px 28px 28px;
+  width:min(88vw,340px);text-align:center;
+  box-shadow:0 4px 0 var(--biscuit),0 12px 40px rgba(90,60,20,.15);
+}
+.lock-icon{font-size:2.4rem;margin-bottom:12px;}
+.lock-title{font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:4px;}
+.lock-sub{font-size:.72rem;color:var(--inkp);margin-bottom:22px;font-weight:600;}
+.lock-input{
+  width:100%;padding:12px 14px;text-align:center;letter-spacing:4px;
+  border:2px solid var(--biscuit);border-radius:12px;
+  font-family:inherit;font-size:1.1rem;color:var(--ink);
+  background:var(--cream);outline:none;margin-bottom:14px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.lock-input:focus{border-color:var(--caramel);box-shadow:0 0 0 3px rgba(196,147,90,.15);}
+.lock-btn{
+  width:100%;padding:12px;border:none;border-radius:12px;
+  background:var(--walnut);color:var(--cream);
+  font-family:inherit;font-size:.88rem;font-weight:700;
+  cursor:pointer;box-shadow:0 3px 0 rgba(60,30,10,.25);
+  transition:background .15s,transform .1s;
+}
+.lock-btn:hover{background:var(--caramel);transform:translateY(-1px);}
+.lock-err{font-size:.72rem;color:#C05050;font-weight:700;margin-top:10px;min-height:18px;}
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <div class="lock-title">マイカレンダー</div>
+    <div class="lock-sub">パスワードを入力してください</div>
+    <input type="password" class="lock-input" id="lockInput" placeholder="••••" maxlength="20">
+    <button class="lock-btn" id="lockBtn">開く</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<div class="app" id="mainApp" style="display:none">
+
+  <div class="hdr">
+    <div class="hdr1">
+      <div class="mnav">
+        <button class="nbtn" id="prevBtn">&#8249;</button>
+        <div class="mtitle" id="mTitle"></div>
+        <button class="nbtn" id="nextBtn">&#8250;</button>
+      </div>
+      <button class="abtn" id="addBtn">＋ 追加</button>
+    </div>
+    <div class="hdr2">
+      <div class="smsg" id="sMsg"></div>
+      <div style="display:flex;gap:6px;">
+        <input type="file" id="impFile" accept=".json" style="display:none">
+        <button class="bbtn" id="impBtn">&#128194; 読み込む</button>
+        <button class="bbtn" id="expBtn">&#128190; バックアップ</button>
+        <button class="bbtn" id="shareBtn" style="background:#FFF0F5;border-color:#F7C6C7;color:#C06080;">&#128140; 共有</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOVER REMINDER -->
+  <div class="clover-section">
+    <div class="clover-hdr">
+      <div class="clover-hdr-left">
+        <span class="clover-hdr-icon">🍀</span>
+        <span class="clover-hdr-title">リマインダー</span>
+      </div>
+      <button class="clover-add-btn" id="cloverAddBtn">＋ 追加</button>
+    </div>
+    <div id="cloverList"></div>
+  </div>
+
+  <!-- CLOVER MODAL -->
+  <div class="ov" id="cloverOv">
+    <div class="modal">
+      <div class="mttl">🍀 リマインダーを追加</div>
+      <div class="fg">
+        <label class="fl">📝 タイトル</label>
+        <input type="text" class="fi" id="crTitle" placeholder="例：親が不在">
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">📅 開始日</label>
+          <input type="date" class="fi" id="crStart">
+        </div>
+        <div class="fg">
+          <label class="fl">📅 終了日</label>
+          <input type="date" class="fi" id="crEnd">
+        </div>
+      </div>
+      <div class="mbtns">
+        <button class="bcancel" id="crCancelBtn">キャンセル</button>
+        <button class="bsave" id="crSaveBtn">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cwrap">
+    <div class="wdays">
+      <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+    </div>
+    <div class="dgrid" id="calGrid"></div>
+  </div>
+
+  <div class="lsec">
+    <div class="lhdr">
+      <div class="ltitle" id="lTitle"></div>
+      <div class="lcnt" id="lCnt"></div>
+    </div>
+    <div id="evList"></div>
+  </div>
+
+  <div class="lwrap">
+    <div class="lgt">カテゴリー</div>
+    <div class="lg" id="legend"></div>
+  </div>
+</div>
+
+<!-- DAY POPUP -->
+<div class="ov" id="dayOv">
+  <div class="dpop">
+    <div class="phdr">
+      <div class="pdate" id="pDate"></div>
+      <button class="xcbtn" id="closeDayBtn">&#10005;</button>
+    </div>
+    <div id="pEvs"></div>
+    <button class="paddbtn" id="pAddBtn">＋ この日に追加する</button>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="ov" id="formOv">
+  <div class="modal">
+    <div class="mttl" id="fTitle"></div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">&#128197; 開始日</label>
+        <input type="date" class="fi" id="fDate">
+      </div>
+      <div class="fg">
+        <label class="fl">&#128197; 終了日（任意）</label>
+        <input type="date" class="fi" id="fEndDate">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">&#128336; 開始時間</label>
+        <input type="time" class="fi" id="fStart">
+      </div>
+      <div class="fg">
+        <label class="fl">&#128337; 終了時間（任意）</label>
+        <input type="time" class="fi" id="fEnd">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">&#127991; ジャンル</label>
+      <div class="ggrid" id="gGrid"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">&#128221; 内容</label>
+      <textarea class="fta" id="fContent" placeholder="例：日本語教育実践１ #8"></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="bcancel" id="cancelBtn">キャンセル</button>
+      <button class="bsave" id="saveBtn">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var GENRES = [
+  {id:4,  name:'朗くん',   color:'#F7D0D8'},
+  {id:1,  name:'テスト',   color:'#CDB7F6'},
+  {id:2,  name:'授業',     color:'#BFE3F5'},
+  {id:3,  name:'仕事',     color:'#F7F7F2', border:true},
+  {id:5,  name:'実習',     color:'#BFD8C1'},
+  {id:6,  name:'お誕生日', color:'#F8E7A1'},
+  {id:7,  name:'友達',     color:'#F6B38E'},
+  {id:8,  name:'家族',     color:'#E9D8BE'},
+  {id:9,  name:'図書館',   color:'#8FB7B3'},
+  {id:10, name:'飲み会',   color:'linear-gradient(135deg,#FF6B6B,#FFD93D,#6BCB77,#4D96FF,#C77DFF)', isRainbow:true},
+  {id:11, name:'センモビ', color:'#F7F7F2', border:true},
+  {id:12, name:'祝日',     color:'#E8CFA4'},
+  {id:13, name:'Beauty',   color:'linear-gradient(135deg,#E8D5F5,#D4B8E8,#EAD4F7,#C9A8E0)', isGlitter:true, fancy:true},
+  {id:14, name:'Special',  color:'linear-gradient(135deg,#F9D5E8,#F0B8D4,#FAD4E8,#EBA8CC)', isGlitter:true, fancy:true}
+];
+];
+
+var WD = ['日','月','火','水','木','金','土'];
+var today = new Date();
+var curY = today.getFullYear(), curM = today.getMonth();
+var events = [], editId = null, selG = null, popDay = null;
+var msgTimer = null;
+
+// 2026年 日本の祝日
+var SEED_HOLIDAYS = [
+  {id:'h1',  date:'2026-01-01', start:'', end:'', genre:12, content:'元日'},
+  {id:'h2',  date:'2026-01-12', start:'', end:'', genre:12, content:'成人の日'},
+  {id:'h3',  date:'2026-02-11', start:'', end:'', genre:12, content:'建国記念の日'},
+  {id:'h4',  date:'2026-02-23', start:'', end:'', genre:12, content:'天皇誕生日'},
+  {id:'h5',  date:'2026-03-20', start:'', end:'', genre:12, content:'春分の日'},
+  {id:'h6',  date:'2026-04-29', start:'', end:'', genre:12, content:'昭和の日'},
+  {id:'h7',  date:'2026-05-03', start:'', end:'', genre:12, content:'憲法記念日'},
+  {id:'h8',  date:'2026-05-04', start:'', end:'', genre:12, content:'みどりの日'},
+  {id:'h9',  date:'2026-05-05', start:'', end:'', genre:12, content:'こどもの日'},
+  {id:'h10', date:'2026-07-20', start:'', end:'', genre:12, content:'海の日'},
+  {id:'h11', date:'2026-08-11', start:'', end:'', genre:12, content:'山の日'},
+  {id:'h12', date:'2026-09-21', start:'', end:'', genre:12, content:'敬老の日'},
+  {id:'h13', date:'2026-09-23', start:'', end:'', genre:12, content:'秋分の日'},
+  {id:'h14', date:'2026-10-12', start:'', end:'', genre:12, content:'スポーツの日'},
+  {id:'h15', date:'2026-11-03', start:'', end:'', genre:12, content:'文化の日'},
+  {id:'h16', date:'2026-11-23', start:'', end:'', genre:12, content:'勤労感謝の日'},
+  {id:'h17', date:'2026-12-23', start:'', end:'', genre:12, content:'天皇誕生日 振替休日'}
+];
+
+var SEED = [
+  // 6月
+  {id:'s1',  date:'2026-06-01', start:'18:30', end:'21:40', genre:2,  content:'日本語教育実践１（留学生）#8'},
+  {id:'s2',  date:'2026-06-04', start:'18:30', end:'21:40', genre:2,  content:'日本語教育実践２（生活者/ビジネスパーソン）#8'},
+  {id:'s3',  date:'2026-06-06', start:'12:00', end:'15:00', genre:1,  content:'日本語教育実践２（生活者/ビジネスパーソン）テスト'},
+  {id:'s4',  date:'2026-06-06', start:'10:00', end:'13:10', genre:2,  content:'日本語教育文法 #6'},
+  {id:'s5',  date:'2026-06-07', start:'10:30', end:'13:00', genre:4,  content:'トリトン with MFTeam'},
+  {id:'s6',  date:'2026-06-07', start:'14:00', end:'17:10', genre:2,  content:'言語の構造 #8'},
+  {id:'s7',  date:'2026-06-08', start:'',      end:'',      genre:5,  content:'実習の「説明会資料とzoom」'},
+  {id:'s8',  date:'2026-06-09', start:'21:00', end:'24:00', genre:1,  content:'言語の構造 テスト'},
+  {id:'s9',  date:'2026-06-10', start:'19:00', end:'21:00', genre:10, content:'公共の会食'},
+  {id:'s10', date:'2026-06-13', start:'12:00', end:'15:00', genre:1,  content:'日本語教育実践１（留学生）テスト'},
+  {id:'s11', date:'2026-06-14', start:'15:00', end:'18:00', genre:1,  content:'日本語教育実践３（技能別指導）テスト'},
+  {id:'s12', date:'2026-06-17', start:'19:00', end:'21:00', genre:10, content:'公共の会食'},
+  {id:'s13', date:'2026-06-22', start:'18:00', end:'21:00', genre:1,  content:'日本語教育文法 テスト'},
+  {id:'s14', date:'2026-06-27', start:'15:00', end:'',      genre:1,  content:'評価法とICT テスト'},
+  {id:'s15', date:'2026-06-28', start:'15:00', end:'18:00', genre:1,  content:'日本語教育実践２（生活者/ビジネスパーソン）テスト'},
+  {id:'s16', date:'2026-06-29', start:'17:00', end:'',      genre:11, content:'山岡家🍜'},
+  {id:'s17', date:'2026-06-30', start:'21:00', end:'24:00', genre:1,  content:'評価法とICT テスト'},
+  // 7月
+  {id:'s18', date:'2026-07-14', start:'18:45', end:'21:55', genre:5,  content:'実習①'},
+  {id:'s19', date:'2026-07-17', start:'18:45', end:'21:55', genre:5,  content:'実習②'},
+  {id:'s20', date:'2026-07-21', start:'18:45', end:'21:55', genre:5,  content:'実習③'},
+  {id:'s21', date:'2026-07-28', start:'18:45', end:'21:55', genre:5,  content:'実習④'},
+  {id:'s22', date:'2026-07-31', start:'18:45', end:'21:55', genre:5,  content:'実習⑤'},
+  // 8月
+  {id:'s23', date:'2026-08-04', start:'18:45', end:'21:55', genre:5,  content:'実習⑥'},
+  {id:'s24', date:'2026-08-07', start:'18:45', end:'21:55', genre:5,  content:'実習⑦'},
+  {id:'s25', date:'2026-08-13', start:'08:00', end:'21:55', endDate:'2026-08-15', genre:4, content:'東京（仮）'},
+  {id:'s26', date:'2026-08-18', start:'11:30', end:'',      genre:8,  content:'ファミリー撮影'},
+  {id:'s27', date:'2026-08-18', start:'18:45', end:'21:55', genre:5,  content:'実習⑧'},
+  {id:'s28', date:'2026-08-25', start:'18:45', end:'21:55', genre:5,  content:'実習⑨'},
+  // 9月
+  {id:'s29', date:'2026-09-01', start:'18:45', end:'21:55', genre:5,  content:'実習10'},
+  {id:'s30', date:'2026-09-08', start:'18:45', end:'21:55', genre:5,  content:'実習11'},
+  {id:'s31', date:'2026-09-15', start:'18:45', end:'21:55', genre:5,  content:'実習12'},
+  {id:'s32', date:'2026-09-29', start:'18:45', end:'21:55', genre:5,  content:'実習13'}
+];
+
+// 誕生日
+var SEED_BDAY = [
+  {id:'b1', date:'2026-01-14', start:'', end:'', genre:6, content:'高橋先生'},
+  {id:'b2', date:'2026-04-26', start:'', end:'', genre:6, content:'朗くん'},
+  {id:'b3', date:'2026-06-04', start:'', end:'', genre:6, content:'吉井先生'},
+  {id:'b4', date:'2026-06-06', start:'', end:'', genre:6, content:'八木先生'},
+  {id:'b5', date:'2026-06-14', start:'', end:'', genre:6, content:'鈴木先生'},
+  {id:'b6', date:'2026-07-13', start:'', end:'', genre:6, content:'北橋くん'},
+  {id:'b7', date:'2026-08-01', start:'', end:'', genre:6, content:'駒崎くん'}
+];
+
+// クローバーリマインダー初期値
+var SEED_CLOVER = [
+  {id:'c1', title:'MFTeam北見',                        startDate:'2026-06-10', endDate:'2026-06-11'},
+  {id:'c2', title:'MFTeam東京',                        startDate:'2026-06-16', endDate:'2026-06-21'},
+  {id:'c3', title:'MFTeam北見',                        startDate:'2026-06-23', endDate:'2026-06-24'},
+  {id:'c4', title:'MFTeam with Jan and Zdravka in 京都', startDate:'2026-06-30', endDate:'2026-07-02'},
+  {id:'c5', title:'MFTeam with Jan and Zdravka in 東京', startDate:'2026-07-14', endDate:'2026-07-16'}
+];
+
+// ── FIREBASE ──
+var firebaseConfig = {
+  apiKey: "AIzaSyAGsozI-MpvLFGuzreUgSWXxURXAsiGzIg",
+  authDomain: "hanaemycalendar.firebaseapp.com",
+  databaseURL: "https://hanaemycalendar-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hanaemycalendar",
+  storageBucket: "hanaemycalendar.firebasestorage.app",
+  messagingSenderId: "821092763775",
+  appId: "1:821092763775:web:8a418f94a207c56384d74a",
+  measurementId: "G-8WHY35GYW7"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+function loadData() {
+  db.ref('events').on('value', function(snapshot) {
+    var data = snapshot.val();
+    if (data) {
+      events = Object.values(data);
+    } else {
+      // 初回：SEEDデータをFirebaseに保存
+      events = JSON.parse(JSON.stringify(SEED))
+        .concat(JSON.parse(JSON.stringify(SEED_BDAY)))
+        .concat(JSON.parse(JSON.stringify(SEED_HOLIDAYS)));
+      saveData();
+    }
+    render();
+  });
+}
+
+function saveData() {
+  var obj = {};
+  events.forEach(function(e) { obj[e.id] = e; });
+  db.ref('events').set(obj);
+  showMsg();
+}
+
+function loadClover() {
+  db.ref('clover').on('value', function(snapshot) {
+    var data = snapshot.val();
+    if (data) {
+      cloverReminders = Object.values(data);
+    } else {
+      cloverReminders = JSON.parse(JSON.stringify(SEED_CLOVER));
+      saveClover();
+    }
+    renderCloverList();
+    render();
+  });
+}
+
+function saveClover() {
+  var obj = {};
+  cloverReminders.forEach(function(r) { obj[r.id] = r; });
+  db.ref('clover').set(obj);
+}
+
+function showMsg() {
+  var el = document.getElementById('sMsg');
+  el.textContent = '✅ 保存しました';
+  el.className = 'smsg ok';
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(function() {
+    el.textContent = '';
+    el.className = 'smsg';
+  }, 2000);
+}
+
+// EXPORT
+document.getElementById('expBtn').onclick = function() {
+  var blob = new Blob([JSON.stringify(events, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'calendar_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// IMPORT
+document.getElementById('impBtn').onclick = function() {
+  document.getElementById('impFile').click();
+};
+document.getElementById('impFile').onchange = function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(ev) {
+    try {
+      var d = JSON.parse(ev.target.result);
+      if (!Array.isArray(d)) throw new Error();
+      events = d;
+      saveData();
+      render();
+      alert(d.length + '件の予定を読み込みました！');
+    } catch(err) {
+      alert('ファイルの形式が正しくありません');
+    }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+};
+
+function getG(id) {
+  return GENRES.find(function(g) { return g.id === id; }) || GENRES[0];
+}
+
+function timeStr(ev) {
+  return ev.start + (ev.end ? '〜' + ev.end : '');
+}
+
+function dateStr(y, m, d) {
+  return y + '-' + pad(m + 1) + '-' + pad(d);
+}
+
+function evCoversDate(ev, ds) {
+  if (!ev.endDate) return ev.date === ds;
+  return ev.date <= ds && ds <= ev.endDate;
+}
+
+function evSpanPos(ev, ds) {
+  if (!ev.endDate || ev.date === ev.endDate) return 'single';
+  if (ds === ev.date) return 'start';
+  if (ds === ev.endDate) return 'end';
+  return 'mid';
+}
+
+function getMonthEvs() {
+  var y = curY, m = curM;
+  var firstDs = dateStr(y, m, 1);
+  var lastDs  = dateStr(y, m, new Date(y, m + 1, 0).getDate());
+  return events.filter(function(e) {
+    var ed = e.endDate || e.date;
+    return e.date <= lastDs && ed >= firstDs;
+  }).sort(function(a, b) {
+    return a.date.localeCompare(b.date) || a.start.localeCompare(b.start);
+  });
+}
+
+function render() {
+  document.getElementById('mTitle').textContent = curY + '年' + (curM + 1) + '月';
+
+  var grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  var first = new Date(curY, curM, 1).getDay();
+  var days  = new Date(curY, curM + 1, 0).getDate();
+  var mevs  = getMonthEvs();
+
+  // ── CLOVER REMINDER LIST ──
+  renderCloverList();
+
+  for (var i = 0; i < first; i++) {
+    var emp = document.createElement('div');
+    emp.className = 'dc emp';
+    grid.appendChild(emp);
+  }
+
+  for (var d = 1; d <= days; d++) {
+    var ds = dateStr(curY, curM, d);
+    var devs = mevs.filter(function(e) { return evCoversDate(e, ds); });
+    var dow  = (first + d - 1) % 7;
+    var isT  = (d === today.getDate() && curM === today.getMonth() && curY === today.getFullYear());
+
+    var isHoliday = devs.some(function(e) { return e.genre === 12; });
+
+    var cell = document.createElement('div');
+    var cls  = 'dc';
+    if (dow === 0) cls += ' sun';
+    if (dow === 6) cls += ' sat';
+    if (isHoliday) cls += ' hol';
+    if (isT) cls += ' tod';
+    if (devs.length > 0) cls += ' hev';
+    cell.className = cls;
+
+    var num = document.createElement('div');
+    num.className = 'dn';
+    num.textContent = d;
+    cell.appendChild(num);
+
+    // 🍀 clover pin for reminders covering this date
+    var hasClover = cloverReminders.some(function(r) {
+      return r.startDate <= ds && ds <= r.endDate;
+    });
+    if (hasClover) {
+      var pin = document.createElement('div');
+      pin.className = 'clover-dot';
+      pin.textContent = '🍀';
+      cell.appendChild(pin);
+    }
+
+    // 🐣 birthday pin for genre=6 events on this date
+    var hasBday = devs.some(function(e) { return e.genre === 6; });
+    if (hasBday) {
+      var bpin = document.createElement('div');
+      bpin.className = 'bday-dot';
+      bpin.textContent = '🐣';
+      cell.appendChild(bpin);
+    }
+
+    if (devs.length > 0) {
+      var wrap = document.createElement('div');
+      wrap.className = 'cevs';
+      var shown = devs.slice(0, 3);
+      for (var j = 0; j < shown.length; j++) {
+        var ev  = shown[j];
+        var g   = getG(ev.genre);
+        var pos = evSpanPos(ev, ds);
+        var tag = document.createElement('div');
+        tag.className = 'ctag';
+        tag.style.background = g.color;
+        if (g.border) tag.style.border = '1px solid #C8C0B0';
+        if (pos === 'start') {
+          tag.textContent = (ev.start || '') + '〜';
+        } else if (pos === 'end') {
+          tag.textContent = '〜' + (ev.end || '');
+        } else if (pos === 'mid') {
+          tag.textContent = '|';
+          tag.style.opacity = '0.75';
+        } else {
+          tag.textContent = ev.start ? (ev.start + (ev.end ? '〜' + ev.end : '')) : ev.content.slice(0,6);
+        }
+        wrap.appendChild(tag);
+      }
+      if (devs.length > 3) {
+        var more = document.createElement('div');
+        more.className = 'ctag';
+        more.style.background = '#E8D9C0';
+        more.style.color = '#7A6A58';
+        more.textContent = '+' + (devs.length - 3);
+        wrap.appendChild(more);
+      }
+      cell.appendChild(wrap);
+      (function(dateStr_) {
+        cell.addEventListener('click', function() { openDay(dateStr_); });
+      })(ds);
+    }
+    grid.appendChild(cell);
+  }
+
+  // list: show events that START this month
+  var listEvs = events.filter(function(e) {
+    var d = new Date(e.date);
+    return d.getFullYear() === curY && d.getMonth() === curM;
+  }).sort(function(a,b) { return a.date.localeCompare(b.date) || a.start.localeCompare(b.start); });
+
+  document.getElementById('lTitle').textContent = (curM + 1) + '月の予定';
+  document.getElementById('lCnt').textContent   = listEvs.length + '件';
+
+  var le = document.getElementById('evList');
+  le.innerHTML = '';
+  if (listEvs.length === 0) {
+    le.innerHTML = '<div class="empty"><div style="font-size:2rem;margin-bottom:10px">🍪</div>まだ予定がありません<br>「＋ 追加」から入れてみよう</div>';
+  } else {
+    for (var k = 0; k < listEvs.length; k++) {
+      var ev = listEvs[k];
+      var g  = getG(ev.genre);
+      var dd = new Date(ev.date);
+      var dateLabel = (dd.getMonth()+1) + '/' + dd.getDate() + '（' + WD[dd.getDay()] + '）';
+      if (ev.endDate && ev.endDate !== ev.date) {
+        var ed = new Date(ev.endDate);
+        dateLabel += ' 〜 ' + (ed.getMonth()+1) + '/' + ed.getDate() + '（' + WD[ed.getDay()] + '）';
+      }
+      var ts  = ev.start ? timeStr(ev) : '';
+      var item = document.createElement('div');
+      item.className = 'eitem';
+      var bdr = g.border ? ';border:1px solid #C8C0B0' : '';
+      var fancyCls = g.fancy ? ' badge-fancy' : '';
+      item.innerHTML =
+        '<div class="ebar" style="background:' + g.color + bdr + '"></div>' +
+        '<div class="ebody">' +
+          '<div class="emeta">' + dateLabel + (ts ? '　' + ts : '') + '</div>' +
+          '<div class="ename">' + esc(ev.content) + '</div>' +
+        '</div>' +
+        '<span class="badge' + fancyCls + '" style="background:' + g.color + bdr + '">' + g.name + '</span>' +
+        '<div style="display:flex;gap:5px">' +
+          '<button class="ibtn ebtn" style="background:#EFE7D8;color:#7A5C3A">✏️</button>' +
+          '<button class="ibtn dbtn" style="background:#F5E8E8;color:#B06060">🗑</button>' +
+        '</div>';
+      (function(evId) {
+        item.querySelector('.ebtn').addEventListener('click', function() { openEdit(evId); });
+        item.querySelector('.dbtn').addEventListener('click', function() { delEv(evId); });
+      })(ev.id);
+      le.appendChild(item);
+    }
+  }
+
+  var leg = document.getElementById('legend');
+  leg.innerHTML = '';
+  for (var n = 0; n < GENRES.length; n++) {
+    var g = GENRES[n];
+    var li = document.createElement('div');
+    li.className = 'lgi';
+    var w = g.isRainbow ? 18 : 10;
+    var bd = g.border ? ';border:1px solid #C8C0B0' : '';
+    li.innerHTML = '<div class="lgd" style="width:' + w + 'px;background:' + g.color + bd + '"></div>' + g.name;
+    leg.appendChild(li);
+  }
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// NAV
+document.getElementById('prevBtn').onclick = function() {
+  curM--; if (curM < 0) { curM = 11; curY--; } render();
+};
+document.getElementById('nextBtn').onclick = function() {
+  curM++; if (curM > 11) { curM = 0; curY++; } render();
+};
+
+// DAY POPUP
+function openDay(ds) {
+  popDay = ds;
+  var devs = events.filter(function(e) { return evCoversDate(e, ds); })
+    .sort(function(a,b) { return a.start.localeCompare(b.start); });
+  var dd = new Date(ds);
+  document.getElementById('pDate').textContent = (dd.getMonth()+1) + '月' + dd.getDate() + '日（' + WD[dd.getDay()] + '）';
+  var el = document.getElementById('pEvs');
+  el.innerHTML = '';
+  if (devs.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:#B0A090;padding:18px;font-size:.8rem;font-weight:700">予定なし 🍪</div>';
+  } else {
+    for (var i = 0; i < devs.length; i++) {
+      var ev = devs[i];
+      var g  = getG(ev.genre);
+      var bdr = g.border ? ';border:1px solid #C8C0B0' : '';
+      var pev = document.createElement('div');
+      pev.className = 'pev';
+      // Build time/date label
+      var ptimeLabel = '';
+      if (ev.endDate && ev.endDate !== ev.date) {
+        var sd = new Date(ev.date), ed2 = new Date(ev.endDate);
+        ptimeLabel += (sd.getMonth()+1)+'/'+sd.getDate()+'〜'+(ed2.getMonth()+1)+'/'+ed2.getDate();
+        if (ev.start) ptimeLabel += '　' + (ev.start + (ev.end ? '〜'+ev.end : ''));
+      } else {
+        ptimeLabel = ev.start ? (ev.start + (ev.end ? '〜'+ev.end : '')) : '';
+      }
+      pev.innerHTML =
+        '<div class="pbar" style="background:' + g.color + bdr + '"></div>' +
+        '<div class="pinfo">' +
+          '<div class="ptime">' + ptimeLabel + '<span class="badge" style="background:' + g.color + bdr + '">' + g.name + '</span></div>' +
+          '<div class="pname">' + esc(ev.content) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px">' +
+          '<button class="ibtn pebtn" style="background:#EFE7D8;color:#7A5C3A">✏️</button>' +
+          '<button class="ibtn pdbtn" style="background:#F5E8E8;color:#B06060">🗑</button>' +
+        '</div>';
+      (function(evId) {
+        pev.querySelector('.pebtn').addEventListener('click', function() { openEdit(evId); closeDay(); });
+        pev.querySelector('.pdbtn').addEventListener('click', function() { delEv(evId); });
+      })(ev.id);
+      el.appendChild(pev);
+    }
+  }
+  document.getElementById('pAddBtn').onclick = function() { closeDay(); openAdd(ds); };
+  document.getElementById('dayOv').classList.add('on');
+}
+
+function closeDay() {
+  document.getElementById('dayOv').classList.remove('on');
+  popDay = null;
+}
+document.getElementById('closeDayBtn').onclick = closeDay;
+document.getElementById('dayOv').onclick = function(e) { if (e.target === this) closeDay(); };
+
+// FORM
+function buildGGrid(sel) {
+  var grid = document.getElementById('gGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < GENRES.length; i++) {
+    var g = GENRES[i];
+    var opt = document.createElement('div');
+    opt.className = 'gopt' + (g.id === sel ? ' sel' : '');
+    var w = g.isRainbow ? 18 : 12;
+    var bd = g.border ? ';border:1px solid #C8C0B0' : '';
+    opt.innerHTML = '<div class="gdot" style="width:' + w + 'px;background:' + g.color + bd + '"></div><span class="glbl">' + g.name + '</span>';
+    (function(gid, el) {
+      el.onclick = function() {
+        document.querySelectorAll('.gopt').forEach(function(o) { o.classList.remove('sel'); });
+        el.classList.add('sel');
+        selG = gid;
+      };
+    })(g.id, opt);
+    grid.appendChild(opt);
+  }
+}
+
+function openAdd(ds) {
+  editId = null; selG = null;
+  document.getElementById('fTitle').textContent = '🍪 予定を追加';
+  document.getElementById('fDate').value    = ds || '';
+  document.getElementById('fEndDate').value = '';
+  document.getElementById('fStart').value   = '';
+  document.getElementById('fEnd').value     = '';
+  document.getElementById('fContent').value = '';
+  buildGGrid(null);
+  document.getElementById('formOv').classList.add('on');
+}
+
+function openEdit(id) {
+  var ev = events.find(function(e) { return e.id == id; });
+  if (!ev) return;
+  editId = id; selG = ev.genre;
+  document.getElementById('fTitle').textContent  = '✏️ 予定を編集';
+  document.getElementById('fDate').value     = ev.date;
+  document.getElementById('fEndDate').value  = ev.endDate || '';
+  document.getElementById('fStart').value    = ev.start;
+  document.getElementById('fEnd').value      = ev.end || '';
+  document.getElementById('fContent').value  = ev.content;
+  buildGGrid(ev.genre);
+  document.getElementById('formOv').classList.add('on');
+}
+
+function closeForm() { document.getElementById('formOv').classList.remove('on'); }
+document.getElementById('cancelBtn').onclick = closeForm;
+document.getElementById('formOv').onclick = function(e) { if (e.target === this) closeForm(); };
+document.getElementById('addBtn').onclick = function() { openAdd(''); };
+
+document.getElementById('saveBtn').onclick = function() {
+  var date    = document.getElementById('fDate').value;
+  var endDate = document.getElementById('fEndDate').value;
+  var start   = document.getElementById('fStart').value;
+  var end     = document.getElementById('fEnd').value;
+  var content = document.getElementById('fContent').value.trim();
+  if (!date)    { alert('日付を入力してください'); return; }
+  if (!selG)    { alert('ジャンルを選んでください'); return; }
+  if (!content) { alert('内容を入力してください'); return; }
+  // endDate must be >= date if set
+  if (endDate && endDate < date) { alert('終了日は開始日以降にしてください'); return; }
+  var evObj = {id: editId || String(Date.now()), date:date, endDate:endDate, start:start, end:end, genre:selG, content:content};
+  if (editId) {
+    var idx = events.findIndex(function(e) { return e.id == editId; });
+    if (idx > -1) events[idx] = evObj;
+  } else {
+    events.push(evObj);
+  }
+  saveData();
+  closeForm();
+  var d = new Date(date); curY = d.getFullYear(); curM = d.getMonth();
+  render();
+};
+
+function delEv(id) {
+  events = events.filter(function(e) { return e.id != id; });
+  saveData();
+  render();
+  if (popDay) {
+    var rem = events.filter(function(e) { return e.date === popDay; });
+    if (rem.length === 0) closeDay(); else openDay(popDay);
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeForm(); closeDay(); }
+});
+
+// ── SHARE (read-only export) ──
+document.getElementById('shareBtn').onclick = function() {
+  var btn = document.getElementById('shareBtn');
+  btn.textContent = '⏳ 生成中…';
+  btn.disabled = true;
+
+  // Fetch the source HTML file itself
+  fetch(location.href)
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      var evData = JSON.stringify(events);
+      var crData = JSON.stringify(cloverReminders);
+      var dateLabel = new Date().toLocaleDateString('ja-JP');
+
+      // 1. Embed data — replace load functions with hardcoded values
+      html = html.replace(
+        /function loadData\(\)\s*\{[^}]*\}/,
+        'function loadData(){events=' + evData + ';}'
+      );
+      html = html.replace(
+        /function loadClover\(\)\s*\{[^}]*\}/,
+        'function loadClover(){cloverReminders=' + crData + ';}'
+      );
+
+      // 2. Disable save/import functions
+      html = html.replace('function saveData()', 'function _saveData_disabled()');
+      html = html.replace('function saveClover()', 'function _saveClover_disabled()');
+      html = html.replace(/saveData\(\)/g, '_noop()');
+      html = html.replace(/saveClover\(\)/g, '_noop()');
+
+      // 3. Hide edit UI: wrap hdr2 content, hide buttons
+      html = html.replace('id="addBtn"',    'id="addBtn" style="display:none"');
+      html = html.replace('id="impBtn"',    'id="impBtn" style="display:none"');
+      html = html.replace('id="expBtn"',    'id="expBtn" style="display:none"');
+      html = html.replace('id="shareBtn"',  'id="shareBtn" style="display:none"');
+      html = html.replace('id="impFile"',   'id="impFile" style="display:none"');
+      html = html.replace('id="sMsg"',      'id="sMsg" style="display:none"');
+      html = html.replace('id="cloverAddBtn"', 'id="cloverAddBtn" style="display:none"');
+      html = html.replace('id="formOv"',    'id="formOv" style="display:none"');
+      html = html.replace('id="cloverOv"',  'id="cloverOv" style="display:none"');
+
+      // 4. Add noop helper + read-only banner
+      html = html.replace(
+        '<script>',
+        '<script>\nfunction _noop(){}\n'
+      );
+      html = html.replace(
+        '<div class="app">',
+        '<div class="app"><div style="background:linear-gradient(135deg,#F7C6C7,#FFE4EC);border-bottom:2px solid #F0B8C8;padding:11px 20px;text-align:center;font-size:.76rem;font-weight:700;color:#A04060;letter-spacing:.5px;">💕 ' + dateLabel + ' 時点のスケジュール（見るだけ版）</div>'
+      );
+
+      var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href   = url;
+      a.download = 'calendar_share_' + new Date().toISOString().slice(0,10) + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(function(){
+      // Fallback: if fetch fails (e.g. opened as file://), alert instructions
+      alert('ダウンロードするには、このHTMLファイルをブラウザで直接開いてください。\n（file:// ではなく、ダウンロードしたファイルをダブルクリックで開いてから試してください）');
+    })
+    .finally(function(){
+      btn.textContent = '💌 共有';
+      btn.disabled = false;
+    });
+};
+
+var cloverReminders = [];
+
+function loadClover() {
+  try {
+    var d = JSON.parse(localStorage.getItem('myCloverReminders') || 'null');
+    cloverReminders = (d && d.length > 0) ? d : JSON.parse(JSON.stringify(SEED_CLOVER));
+  } catch(e) { cloverReminders = JSON.parse(JSON.stringify(SEED_CLOVER)); }
+}
+function saveClover() {
+  try { localStorage.setItem('myCloverReminders', JSON.stringify(cloverReminders)); } catch(e) {}
+}
+
+function renderCloverList() {
+  var el = document.getElementById('cloverList');
+  el.innerHTML = '';
+  if (cloverReminders.length === 0) {
+    el.innerHTML = '<div class="clover-empty">まだありません</div>';
+    return;
+  }
+  var sorted = cloverReminders.slice().sort(function(a,b){ return a.startDate.localeCompare(b.startDate); });
+  sorted.forEach(function(r) {
+    var sd = new Date(r.startDate), ed = new Date(r.endDate);
+    var days2 = Math.round((ed - sd) / 86400000) + 1;
+    var sdL = (sd.getMonth()+1)+'/'+sd.getDate()+'（'+WD[sd.getDay()]+'）';
+    var edL = (ed.getMonth()+1)+'/'+ed.getDate()+'（'+WD[ed.getDay()]+'）';
+    var item = document.createElement('div');
+    item.className = 'clover-item';
+    item.innerHTML =
+      '<div class="clover-item-pin">🍀</div>' +
+      '<div class="clover-item-body">' +
+        '<div class="clover-item-title">' + esc(r.title) + '</div>' +
+        '<div class="clover-item-dates">' + sdL + ' 〜 ' + edL + '　' + days2 + '日間</div>' +
+      '</div>' +
+      '<button class="clover-item-del" data-id="' + r.id + '">✕</button>';
+    item.querySelector('.clover-item-del').addEventListener('click', function() {
+      var id = this.getAttribute('data-id');
+      cloverReminders = cloverReminders.filter(function(x){ return x.id !== id; });
+      saveClover();
+      renderCloverList();
+      render();
+    });
+    el.appendChild(item);
+  });
+}
+
+// clover modal
+document.getElementById('cloverAddBtn').onclick = function() {
+  document.getElementById('crTitle').value = '';
+  document.getElementById('crStart').value = '';
+  document.getElementById('crEnd').value   = '';
+  document.getElementById('cloverOv').classList.add('on');
+};
+document.getElementById('crCancelBtn').onclick = function() {
+  document.getElementById('cloverOv').classList.remove('on');
+};
+document.getElementById('cloverOv').onclick = function(e) {
+  if (e.target === this) document.getElementById('cloverOv').classList.remove('on');
+};
+document.getElementById('crSaveBtn').onclick = function() {
+  var title = document.getElementById('crTitle').value.trim();
+  var start = document.getElementById('crStart').value;
+  var end   = document.getElementById('crEnd').value;
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!start) { alert('開始日を入力してください'); return; }
+  if (!end)   { alert('終了日を入力してください'); return; }
+  if (end < start) { alert('終了日は開始日以降にしてください'); return; }
+  cloverReminders.push({ id: String(Date.now()), title: title, startDate: start, endDate: end });
+  saveClover();
+  document.getElementById('cloverOv').classList.remove('on');
+  renderCloverList();
+  // jump to start month
+  var d = new Date(start); curY = d.getFullYear(); curM = d.getMonth();
+  render();
+};
+
+// ── PASSWORD ──
+var PASS = '2001';
+var initialized = false;
+
+function initApp() {
+  if (!initialized) {
+    initialized = true;
+    loadData();
+    loadClover();
+  }
+}
+
+function checkPass() {
+  var val = document.getElementById('lockInput').value;
+  if (val === PASS) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    sessionStorage.setItem('calUnlocked', '1');
+    initApp();
+  } else {
+    var err = document.getElementById('lockErr');
+    err.textContent = 'パスワードが違います 🔒';
+    document.getElementById('lockInput').value = '';
+    document.getElementById('lockInput').focus();
+    setTimeout(function(){ err.textContent = ''; }, 2000);
+  }
+}
+document.getElementById('lockBtn').onclick = checkPass;
+document.getElementById('lockInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkPass();
+});
+
+// Auto-unlock if already unlocked this session
+if (sessionStorage.getItem('calUnlocked') === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  initApp();
+}
+</script>
+</body>
+</html>
